@@ -68,7 +68,11 @@ minetest.register_entity("cruiseship:exterior_vessel", {
     initial_properties = {
         visual = "mesh",
         mesh = "cruiseship.obj",
-        textures = {"cruiseship_texture.png"},
+        textures = {
+            "cruiseship_texture.png",
+            "cruiseship_texture.png",
+            "cruiseship_texture.png",
+        },
         -- Visual scale calibrated so 18 units mesh length = ~200 blocks in world
         -- 200 / 18.046 ≈ 11.08
         visual_size = {x = 11.0, y = 11.0, z = 11.0},

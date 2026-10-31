@@ -101,12 +101,13 @@ function cruiseship.generator.generate(ship_id, slot_index)
         end
     end
 
-    -- 1. Outer Hull Shell & Keel (from z = -95 to +95, y = 0 to 18)
+    -- 1. Outer Hull Shell & Keel (from z = -95 to +95, y = 0 to 15)
+    -- Deck 3 (y >= 15) is open-air Sun Deck; walls only enclose Decks 0-2 (y = 0 to 15).
     for z = -95, 95 do
         local hw = get_hull_half_width(z)
         local world_z = oz + z
 
-        for y = 0, 18 do
+        for y = 0, 15 do
             local world_y = oy + y
             -- Taper hull inward near bottom (keel shape)
             local current_hw = hw
@@ -147,8 +148,8 @@ function cruiseship.generator.generate(ship_id, slot_index)
         -- Deck 1 floor (y = 5)
         for x = -hw + 1, hw - 1 do
             set_vox(ox + x, oy + 5, world_z, c_deck_wood)
-            -- Recessed ceiling lights for Deck 0
-            if (z % 8 == 0) and (x == 0 or math.abs(x) == 5) then
+            -- Recessed ceiling lights for Deck 0 (spaced every 4 blocks)
+            if (z % 4 == 0) and (x == 0 or math.abs(x) == 5) then
                 set_vox(ox + x, oy + 4, world_z, c_led)
             end
         end
@@ -156,8 +157,8 @@ function cruiseship.generator.generate(ship_id, slot_index)
         -- Deck 2 floor (y = 10)
         for x = -hw + 1, hw - 1 do
             set_vox(ox + x, oy + 10, world_z, c_deck_wood)
-            -- Recessed ceiling lights for Deck 1
-            if (z % 8 == 0) and (x == 0 or math.abs(x) == 6) then
+            -- Recessed ceiling lights for Deck 1 (spaced every 4 blocks)
+            if (z % 4 == 0) and (x == 0 or math.abs(x) == 6) then
                 set_vox(ox + x, oy + 9, world_z, c_led)
             end
         end
@@ -165,8 +166,8 @@ function cruiseship.generator.generate(ship_id, slot_index)
         -- Deck 3 floor / Sun Deck (y = 15)
         for x = -hw + 1, hw - 1 do
             set_vox(ox + x, oy + 15, world_z, c_deck_wood)
-            -- Recessed ceiling lights for Deck 2
-            if (z % 8 == 0) and (x == 0 or math.abs(x) == 6) then
+            -- Recessed ceiling lights for Deck 2 (spaced every 4 blocks)
+            if (z % 4 == 0) and (x == 0 or math.abs(x) == 6) then
                 set_vox(ox + x, oy + 14, world_z, c_led)
             end
         end
@@ -190,19 +191,24 @@ function cruiseship.generator.generate(ship_id, slot_index)
     set_vox(ox + 13, oy + 2, oz + foyer_z, c_portal)
     set_vox(ox + 13, oy + 3, oz + foyer_z, c_led)
 
-    -- 4. Grand Multi-Deck Atrium (z = -10 to +25)
+    -- 4. Grand Multi-Deck Atrium (z = -5 to +20)
     -- Central opening linking Deck 0, Deck 1, and Deck 2 with glass railing and stairs
+    -- Deck 3 has a panoramic glass skylight directly overhead to bathe all levels in natural sunlight
     for z = -5, 20 do
         for x = -4, 4 do
             -- Cut out central lightwell
             set_vox(ox + x, oy + 5, oz + z, c_air)
             set_vox(ox + x, oy + 10, oz + z, c_air)
+            -- Skylight on Deck 3 floor ceiling opening
+            set_vox(ox + x, oy + 15, oz + z, c_glass)
         end
         -- Glass railings around the open atrium void
         set_vox(ox - 4, oy + 6, oz + z, c_railing, 0)
         set_vox(ox + 4, oy + 6, oz + z, c_railing, 2)
         set_vox(ox - 4, oy + 11, oz + z, c_railing, 0)
         set_vox(ox + 4, oy + 11, oz + z, c_railing, 2)
+        set_vox(ox - 4, oy + 16, oz + z, c_railing, 0)
+        set_vox(ox + 4, oy + 16, oz + z, c_railing, 2)
     end
     -- Atrium end railings
     for x = -4, 4 do
@@ -210,6 +216,8 @@ function cruiseship.generator.generate(ship_id, slot_index)
         set_vox(ox + x, oy + 6, oz + 20, c_railing, 3)
         set_vox(ox + x, oy + 11, oz - 5, c_railing, 1)
         set_vox(ox + x, oy + 11, oz + 20, c_railing, 3)
+        set_vox(ox + x, oy + 16, oz - 5, c_railing, 1)
+        set_vox(ox + x, oy + 16, oz + 20, c_railing, 3)
     end
 
     -- Grand Atrium Central Staircases
@@ -274,7 +282,8 @@ function cruiseship.generator.generate(ship_id, slot_index)
         set_vox(ox + bed_x, oy + 6, oz + cz + 1, c_bed)
         set_vox(ox + bed_x, oy + 6, oz + cz + 2, c_chest)
         set_vox(ox + sign * 4, oy + 6, oz + cz + 3, c_sofa)
-        set_vox(ox + sign * 6, oy + 9, oz + cz + 2, c_led) -- Ceiling lamp
+        set_vox(ox + sign * 6, oy + 9, oz + cz + 2, c_led) -- Cabin Ceiling lamp
+        set_vox(ox, oy + 9, oz + cz + 2, c_led) -- Corridor Ceiling lamp
     end
 
     -- Generate staterooms along the corridors
@@ -420,11 +429,16 @@ function cruiseship.generator.generate(ship_id, slot_index)
         end
     end
 
-    -- Write all voxel manipulator data back to map
+    -- Write all voxel manipulator data back to map with automatic lighting recalculation
     manip:set_data(data)
     manip:set_param2_data(param2_data)
-    manip:write_to_map()
+    manip:write_to_map(true)
     manip:update_map()
+
+    -- Ensure sunlight and artificial light propagate cleanly across the generated interior
+    if minetest.fix_light then
+        minetest.fix_light(minp, maxp)
+    end
 
     -- Set NodeMeta on Bridge Controllers
     local wheel_pos = {x = ox - 1, y = oy + 20, z = oz + 73}

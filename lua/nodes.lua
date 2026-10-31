@@ -240,6 +240,7 @@ minetest.register_craftitem("cruiseship:ship_item", {
     description = S("Modern Cruise Liner (200m Luxury Vessel)\nRight-click on ocean water to deploy"),
     inventory_image = "cruiseship_ship_item.png",
     wield_image = "cruiseship_ship_item.png",
+    liquids_pointable = true,
     stack_max = 1,
     on_place = function(itemstack, placer, pointed_thing)
         if pointed_thing.type ~= "node" then
@@ -247,7 +248,10 @@ minetest.register_craftitem("cruiseship:ship_item", {
         end
         local pos = pointed_thing.above
         local node_under = minetest.get_node(pointed_thing.under)
-        -- Can be deployed on water or near sea level
+        local def_under = minetest.registered_nodes[node_under.name]
+        if def_under and def_under.liquidtype and def_under.liquidtype ~= "none" then
+            pos = pointed_thing.under
+        end
         local success, msg_or_id = cruiseship.spawn_cruise_liner(pos, placer:get_look_horizontal())
         if success then
             minetest.chat_send_player(placer:get_player_name(), "Cruise liner deployed! Use the gangway or bridge to navigate.")
@@ -265,6 +269,7 @@ minetest.register_craftitem("cruiseship:spawn_egg", {
     description = S("Cruise Liner Spawn Egg\nRight-click on ocean water or surface to commission 200m Cruise Ship"),
     inventory_image = "cruiseship_spawn_egg.png",
     wield_image = "cruiseship_spawn_egg.png",
+    liquids_pointable = true,
     stack_max = 64,
     groups = {spawn_egg = 1},
     on_place = function(itemstack, placer, pointed_thing)
@@ -272,6 +277,11 @@ minetest.register_craftitem("cruiseship:spawn_egg", {
             return itemstack
         end
         local pos = pointed_thing.above
+        local node_under = minetest.get_node(pointed_thing.under)
+        local def_under = minetest.registered_nodes[node_under.name]
+        if def_under and def_under.liquidtype and def_under.liquidtype ~= "none" then
+            pos = pointed_thing.under
+        end
         local success, msg_or_id = cruiseship.spawn_cruise_liner(pos, placer:get_look_horizontal())
         if success then
             minetest.chat_send_player(placer:get_player_name(), "Cruise liner commissioned! Ship ID: " .. tostring(msg_or_id))
